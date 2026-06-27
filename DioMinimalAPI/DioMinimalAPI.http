@@ -1,0 +1,14 @@
+@DioMinimalAPI_HostAddress = https://localhost:7234
+
+GET {{DioMinimalAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
+POST {{DioMinimalAPI_HostAddress}}/login/
+Content-Type: application/json
+
+{
+    "email": "adm@teste.com",
+    "senha": "123456"
+}
