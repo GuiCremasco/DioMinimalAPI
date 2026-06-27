@@ -21,7 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Dominio\Entidades\" />
     <Folder Include="Dominio\Servicos\" />
   </ItemGroup>
 
