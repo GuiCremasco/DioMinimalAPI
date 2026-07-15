@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 using DioMinimalAPI.Dominio.DTO;
 using DioMinimalAPI.Dominio.Interfaces;
+using DioMinimalAPI.Dominio.ModelViews;
 using DioMinimalAPI.Dominio.Servicos;
 using DioMinimalAPI.Infraestrutura.Db;
 
@@ -32,6 +33,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapGet("/", () => Results.Json(new Home()));
 
 app.MapPost("/login", (
     [FromBody] LoginDTO loginDTO,
