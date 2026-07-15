@@ -13,6 +13,7 @@ public class DbContexto : DbContext
     }
 
     public DbSet<Administrador> Administradores { get; set; }
+    public DbSet<Veiculo> Veiculos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
