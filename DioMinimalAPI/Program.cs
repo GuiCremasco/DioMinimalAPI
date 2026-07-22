@@ -39,7 +39,8 @@ var app = builder.Build();
 
 #region Home
 
-app.MapGet("/", () => Results.Json(new Home()));
+app.MapGet("/", () => Results.Json(new Home()))
+   .WithTags("Home");
 
 #endregion Home
 
@@ -55,7 +56,8 @@ app.MapPost("/administradores/login",
         return Results.Ok("Login com sucesso!");
 
     return Results.Unauthorized();
-});
+})
+.WithTags("Administradores");
 
 #endregion Administradores
 
@@ -77,7 +79,8 @@ app.MapPost("/veiculos",
     veiculoServico.Incluir(veiculo);
 
     return Results.Created($"/veiculo/{veiculo.ID}", veiculo);
-});
+})
+.WithTags("Veículos");
 
 app.MapGet("/veiculos",
 (
@@ -88,7 +91,8 @@ app.MapGet("/veiculos",
     var veiculos = veiculoServico.Todos(pagina);
 
     return Results.Ok(veiculos);
-});
+})
+.WithTags("Veículos");
 
 #endregion Veículos
 
