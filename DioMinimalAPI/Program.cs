@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using DioMinimalAPI.Dominio.DTO;
+using DioMinimalAPI.Dominio.Entidades;
 using DioMinimalAPI.Dominio.Interfaces;
 using DioMinimalAPI.Dominio.ModelViews;
 using DioMinimalAPI.Dominio.Servicos;
+
 using DioMinimalAPI.Infraestrutura.Db;
 
 #endregion Usings
@@ -22,6 +24,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IAdministradorServico, AdministradorServico>();
+builder.Services.AddScoped<IVeiculoServico, VeiculoServico>();
 
 builder.Services.AddDbContext<DbContexto>(options =>
 {
@@ -58,6 +61,23 @@ app.MapPost("/administradores/login",
 
 #region Veículos
 
+app.MapPost("/veiculos",
+(
+    [FromBody] VeiculoDTO veiculoDTO,
+    [FromServices] IVeiculoServico veiculoServico
+) =>
+{
+    var veiculo = new Veiculo
+    {
+        Nome = veiculoDTO.Nome,
+        Marca = veiculoDTO.Marca,
+        Ano = veiculoDTO.Ano
+    };
+
+    veiculoServico.Incluir(veiculo);
+
+    return Results.Created($"/veiculo/{veiculo.ID}", veiculo);
+});
 
 #endregion Veículos
 
