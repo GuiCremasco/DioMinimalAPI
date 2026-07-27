@@ -23,4 +23,30 @@ public class AdministradorServico : IAdministradorServico
                                  a.Senha == loginDTO.Senha
                         );
     }
+
+    public Administrador Incluir(Administrador administrador)
+    {
+        _contexto.Administradores.Add(administrador);
+        _contexto.SaveChanges();
+
+        return administrador;
+    }
+
+    public List<Administrador> Todos(int? pagina)
+    {
+        var query = _contexto.Administradores.AsQueryable();
+
+        if (pagina.HasValue && pagina.Value > 0)
+        {
+            int itensPorPagina = 10;
+            query = query.Skip((pagina.Value - 1) * itensPorPagina).Take(itensPorPagina);
+        }
+
+        return query.ToList();
+    }
+
+    public Administrador? BuscaPorID(int id)
+    {
+        return _contexto.Administradores.FirstOrDefault(a => a.ID == id);
+    }
 }

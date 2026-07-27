@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 using DioMinimalAPI.Dominio.DTO;
 using DioMinimalAPI.Dominio.Entidades;
+using DioMinimalAPI.Dominio.Enums;
 using DioMinimalAPI.Dominio.Interfaces;
 using DioMinimalAPI.Dominio.ModelViews;
 using DioMinimalAPI.Dominio.Servicos;
@@ -59,11 +60,106 @@ app.MapPost("/administradores/login",
 })
 .WithTags("Administradores");
 
+ErrosValidacao ValidaAdministradorDTO(AdministradorDTO administradorDTO)
+{
+    var validacao = new ErrosValidacao()
+    {
+        Mensagens = []
+    };
+
+    if (string.IsNullOrWhiteSpace(administradorDTO.Email))
+        validacao.Mensagens.Add("O email não pode ficar em branco.");
+
+    if (string.IsNullOrWhiteSpace(administradorDTO.Senha))
+        validacao.Mensagens.Add("A senha não pode ficar em branco.");
+
+    if (administradorDTO.Perfil == null)
+        validacao.Mensagens.Add("O perfil não pode ficar em branco.");
+
+    return validacao;
+}
+
+app.MapPost("/administradores",
+(
+    [FromBody] AdministradorDTO administradorDTO,
+    [FromServices] IAdministradorServico administradorServico
+) =>
+{
+    var validacao = ValidaAdministradorDTO(administradorDTO);
+
+    if (validacao.Mensagens.Count > 0)
+        return Results.BadRequest(validacao);
+
+    var administrador = new Administrador
+    {
+        Email = administradorDTO.Email,
+        Senha = administradorDTO.Senha,
+        Perfil = administradorDTO.Perfil.ToString() ?? Perfil.Editor.ToString()
+    };
+
+    administradorServico.Incluir(administrador);
+
+    var administradorMV = new AdministradorModelView
+    {
+        ID = administrador.ID,
+        Email = administrador.Email,
+        Perfil = administrador.Perfil
+    };
+
+    return Results.Created($"/administrador/{administrador.ID}", administradorMV);
+})
+.WithTags("Administradores");
+
+app.MapGet("/administradores",
+(
+    [FromQuery] int? pagina,
+    [FromServices] IAdministradorServico administradorServico
+) =>
+{
+    var administradoresMV = new List<AdministradorModelView>();
+    var administradores = administradorServico.Todos(pagina);
+
+    foreach (var administrador in administradores)
+    {
+        administradoresMV.Add(new AdministradorModelView
+        {
+            ID = administrador.ID,
+            Email = administrador.Email,
+            Perfil = administrador.Perfil
+        });
+    }
+
+    return Results.Ok(administradoresMV);
+})
+.WithTags("Administradores");
+
+app.MapGet("/administradores/{ID}",
+(
+    [FromRoute] int ID,
+    [FromServices] IAdministradorServico administradorServico
+) =>
+{
+    var administrador = administradorServico.BuscaPorID(ID);
+
+    if (administrador == null)
+        return Results.NotFound();
+
+    var administradorMV = new AdministradorModelView
+    {
+        ID = administrador.ID,
+        Email = administrador.Email,
+        Perfil = administrador.Perfil
+    };
+
+    return Results.Ok(administradorMV);
+})
+.WithTags("Administradores");
+
 #endregion Administradores
 
 #region Veículos
 
-ErrosValidacao ValidaDTO(VeiculoDTO veiculoDTO)
+ErrosValidacao ValidaVeiculoDTO(VeiculoDTO veiculoDTO)
 {
     var validacao = new ErrosValidacao()
     {
@@ -88,7 +184,7 @@ app.MapPost("/veiculos",
     [FromServices] IVeiculoServico veiculoServico
 ) =>
 {
-    var validacao = ValidaDTO(veiculoDTO);
+    var validacao = ValidaVeiculoDTO(veiculoDTO);
 
     if (validacao.Mensagens.Count > 0)
         return Results.BadRequest(validacao);
@@ -144,7 +240,7 @@ app.MapPut("/veiculos/{ID}",
     if (veiculo == null)
         return Results.NotFound();
 
-    var validacao = ValidaDTO(veiculoDTO);
+    var validacao = ValidaVeiculoDTO(veiculoDTO);
 
     if (validacao.Mensagens.Count > 0)
         return Results.BadRequest(validacao);
