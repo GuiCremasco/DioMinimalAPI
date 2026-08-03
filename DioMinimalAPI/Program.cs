@@ -1,7 +1,13 @@
 #region Usings
 
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 using DioMinimalAPI.Dominio.DTO;
 using DioMinimalAPI.Dominio.Entidades;
@@ -23,6 +29,25 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add JWT Bearer authentication.
+string jwtKey = builder.Configuration.GetSection("Jwt")["Key"]?.ToString() ?? "123456";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateLifetime = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+    };
+});
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IAdministradorServico, AdministradorServico>();
 builder.Services.AddScoped<IVeiculoServico, VeiculoServico>();
@@ -47,14 +72,46 @@ app.MapGet("/", () => Results.Json(new Home()))
 
 #region Administradores
 
+string GerarTokenJwt(Administrador administrador)
+{
+    if (string.IsNullOrWhiteSpace(jwtKey))
+        return string.Empty;
+
+    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+    var claims = new List<Claim>()
+    {
+        new("Email", administrador.Email),
+        new("Perfil", administrador.Perfil)
+    };
+
+    var token = new JwtSecurityToken(expires: DateTime.Now.AddDays(1),
+                                     signingCredentials: credentials,
+                                     claims: claims);
+
+    return new JwtSecurityTokenHandler().WriteToken(token);
+}
+
 app.MapPost("/administradores/login",
 (
     [FromBody] LoginDTO loginDTO,
     [FromServices] IAdministradorServico administradorServico
 ) =>
 {
-    if (administradorServico.Login(loginDTO) != null)
-        return Results.Ok("Login com sucesso!");
+    var administrador = administradorServico.Login(loginDTO);
+
+    if (administrador != null)
+    {
+        string token = GerarTokenJwt(administrador);
+
+        return Results.Ok(new AdministradorLogado()
+        {
+            Email = administrador.Email,
+            Perfil = administrador.Perfil,
+            Token = token
+        });
+    }
 
     return Results.Unauthorized();
 })
@@ -108,6 +165,7 @@ app.MapPost("/administradores",
 
     return Results.Created($"/administrador/{administrador.ID}", administradorMV);
 })
+.RequireAuthorization()
 .WithTags("Administradores");
 
 app.MapGet("/administradores",
@@ -131,6 +189,7 @@ app.MapGet("/administradores",
 
     return Results.Ok(administradoresMV);
 })
+.RequireAuthorization()
 .WithTags("Administradores");
 
 app.MapGet("/administradores/{ID}",
@@ -153,6 +212,7 @@ app.MapGet("/administradores/{ID}",
 
     return Results.Ok(administradorMV);
 })
+.RequireAuthorization()
 .WithTags("Administradores");
 
 #endregion Administradores
@@ -200,6 +260,7 @@ app.MapPost("/veiculos",
 
     return Results.Created($"/veiculo/{veiculo.ID}", veiculo);
 })
+.RequireAuthorization()
 .WithTags("Veículos");
 
 app.MapGet("/veiculos",
@@ -212,6 +273,7 @@ app.MapGet("/veiculos",
 
     return Results.Ok(veiculos);
 })
+.RequireAuthorization()
 .WithTags("Veículos");
 
 app.MapGet("/veiculos/{ID}",
@@ -227,6 +289,7 @@ app.MapGet("/veiculos/{ID}",
 
     return Results.Ok(veiculo);
 })
+.RequireAuthorization()
 .WithTags("Veículos");
 
 app.MapPut("/veiculos/{ID}",
@@ -253,6 +316,7 @@ app.MapPut("/veiculos/{ID}",
 
     return Results.Ok(veiculo);
 })
+.RequireAuthorization()
 .WithTags("Veículos");
 
 app.MapDelete("/veiculos/{ID}",
@@ -269,6 +333,7 @@ app.MapDelete("/veiculos/{ID}",
 
     return Results.NoContent();
 })
+.RequireAuthorization()
 .WithTags("Veículos");
 
 #endregion Veículos
@@ -285,6 +350,9 @@ app.UseHttpsRedirection();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.Run();
 
