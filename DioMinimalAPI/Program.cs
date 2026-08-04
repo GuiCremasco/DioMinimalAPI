@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 
 using DioMinimalAPI.Dominio.DTO;
 using DioMinimalAPI.Dominio.Entidades;
@@ -28,7 +29,23 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Insira o token JWT no campo abaixo:"
+    });
+
+    options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement()
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", doc)] = []
+    });
+});
 
 // Add JWT Bearer authentication.
 string jwtKey = builder.Configuration.GetSection("Jwt")["Key"]?.ToString() ?? "123456";
@@ -43,7 +60,9 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateLifetime = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ValidateIssuer = false,
+        ValidateAudience = false
     };
 });
 
@@ -66,6 +85,7 @@ var app = builder.Build();
 #region Home
 
 app.MapGet("/", () => Results.Json(new Home()))
+   .AllowAnonymous()
    .WithTags("Home");
 
 #endregion Home
@@ -115,6 +135,7 @@ app.MapPost("/administradores/login",
 
     return Results.Unauthorized();
 })
+.AllowAnonymous()
 .WithTags("Administradores");
 
 ErrosValidacao ValidaAdministradorDTO(AdministradorDTO administradorDTO)
