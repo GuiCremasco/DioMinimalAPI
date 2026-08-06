@@ -6,6 +6,6 @@
     <File Path=".gitignore" />
   </Folder>
   <Folder Name="/Test/">
-    <Project Path="Test/Test/Test.csproj" Id="8a2736e9-8edc-47bd-85d2-e96ad5b0ca52" />
+    <Project Path="Test/DioMinimalAPI.Test/DioMinimalAPI.Test.csproj" Id="3d7e622a-22ce-44ed-9873-35841dbb6ba0" />
   </Folder>
 </Solution>

@@ -1,4 +1,4 @@
-﻿namespace Test
+﻿namespace DioMinimalAPI.Test
 {
     [TestClass]
     public sealed class Test1
