@@ -1,6 +1,11 @@
 <Solution>
+  <Folder Name="/API/">
+    <Project Path="API/DioMinimalAPI/DioMinimalAPI.csproj" />
+  </Folder>
   <Folder Name="/Itens de Solução/">
     <File Path=".gitignore" />
   </Folder>
-  <Project Path="DioMinimalAPI/DioMinimalAPI.csproj" />
+  <Folder Name="/Test/">
+    <Project Path="Test/Test/Test.csproj" Id="8a2736e9-8edc-47bd-85d2-e96ad5b0ca52" />
+  </Folder>
 </Solution>
