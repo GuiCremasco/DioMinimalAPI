@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -103,7 +104,8 @@ string GerarTokenJwt(Administrador administrador)
     var claims = new List<Claim>()
     {
         new("Email", administrador.Email),
-        new("Perfil", administrador.Perfil)
+        new("Perfil", administrador.Perfil),
+        new(ClaimTypes.Role, administrador.Perfil)
     };
 
     var token = new JwtSecurityToken(expires: DateTime.Now.AddDays(1),
@@ -187,6 +189,7 @@ app.MapPost("/administradores",
     return Results.Created($"/administrador/{administrador.ID}", administradorMV);
 })
 .RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute() { Roles = $"{Perfil.Adm}" })
 .WithTags("Administradores");
 
 app.MapGet("/administradores",
@@ -211,6 +214,7 @@ app.MapGet("/administradores",
     return Results.Ok(administradoresMV);
 })
 .RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute() { Roles = $"{Perfil.Adm}" })
 .WithTags("Administradores");
 
 app.MapGet("/administradores/{ID}",
@@ -234,6 +238,7 @@ app.MapGet("/administradores/{ID}",
     return Results.Ok(administradorMV);
 })
 .RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute() { Roles = $"{Perfil.Adm}" })
 .WithTags("Administradores");
 
 #endregion Administradores
@@ -282,6 +287,7 @@ app.MapPost("/veiculos",
     return Results.Created($"/veiculo/{veiculo.ID}", veiculo);
 })
 .RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute() { Roles = $"{Perfil.Adm},{Perfil.Editor}" })
 .WithTags("Veículos");
 
 app.MapGet("/veiculos",
@@ -295,6 +301,7 @@ app.MapGet("/veiculos",
     return Results.Ok(veiculos);
 })
 .RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute() { Roles = $"{Perfil.Adm},{Perfil.Editor}" })
 .WithTags("Veículos");
 
 app.MapGet("/veiculos/{ID}",
@@ -311,6 +318,7 @@ app.MapGet("/veiculos/{ID}",
     return Results.Ok(veiculo);
 })
 .RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute() { Roles = $"{Perfil.Adm},{Perfil.Editor}" })
 .WithTags("Veículos");
 
 app.MapPut("/veiculos/{ID}",
@@ -338,6 +346,7 @@ app.MapPut("/veiculos/{ID}",
     return Results.Ok(veiculo);
 })
 .RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute() { Roles = $"{Perfil.Adm}" })
 .WithTags("Veículos");
 
 app.MapDelete("/veiculos/{ID}",
@@ -355,6 +364,7 @@ app.MapDelete("/veiculos/{ID}",
     return Results.NoContent();
 })
 .RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute() { Roles = $"{Perfil.Adm}" })
 .WithTags("Veículos");
 
 #endregion Veículos
